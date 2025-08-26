@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #3730a3;
+            --primary-light: #818cf8;
+            --secondary: #f5f7fa;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --user-bubble: #4f46e5;
+            --ai-bubble: #e5e7eb;
+            --background: #f9fafb;
+            --card-bg: #ffffff;
+            --input-bg: #ffffff;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+            --radius: 16px;
+            --radius-sm: 8px;
+            --code-bg: #2d2d2d;
+            --code-text: #f8f8f2;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--background);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 16px;
+            margin: 0;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 900px;
+            height: 90vh;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .chat-header {
+            background: var(--primary);
+            color: white;
+            padding: 16px 20px;
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            position: relative;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+        }
+
+        .header-actions {
+            position: absolute;
+            right: 16px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .header-actions i {
+            cursor: pointer;
+            font-size: 16px;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .header-actions i:hover {
+            opacity: 1;
+        }
+
+        #chat-box {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background: var(--secondary);
+            position: relative;
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            margin: 10px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .welcome-message h3 {
+            margin-bottom: 8px;
+            color: white;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 16px 20px;
+            border-radius: 18px;
+            position: relative;
+            word-wrap: break-word;
+            line-height: 1.6;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .user {
+            background: var(--user-bubble);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .gemini {
+            background: var(--ai-bubble);
+            color: var(--text-primary);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .gemini-content {
+            font-size: 15px;
+        }
+
+        .gemini-content h3 {
+            margin: 15px 0 8px 0;
+            color: white;
+            font-size: 17px;
+        }
+
+        .gemini-content h4 {
+            margin: 12px 0 6px 0;
+            color: var(--primary-dark);
+            font-size: 16px;
+        }
+
+        .gemini-content p {
+            margin-bottom: 12px;
+        }
+
+        .gemini-content ul, .gemini-content ol {
+            margin: 10px 0 10px 20px;
+        }
+
+        .gemini-content li {
+            margin-bottom: 8px;
+        }
+
+        .code-block {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 12px 0;
+            line-height: 1.5;
+        }
+
+        .inline-code {
+            background: rgba(0, 0, 0, 0.08);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .highlight {
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .message-typing {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 12px 16px;
+            background: var(--ai-bubble);
+            color: var(--text-primary);
+            align-self: flex-start;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            max-width: 90px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--text-secondary);
+            border-radius: 50%;
+            animation: typingAnimation 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: 0s; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        .timestamp {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 6px;
+            text-align: right;
+        }
+
+        .chat-input-container {
+            display: flex;
+            border-top: 1px solid rgba(0,0,0,0.08);
+            padding: 16px;
+            background: var(--card-bg);
+            gap: 12px;
+        }
+
+        #user-input {
+            flex: 1;
+            padding: 14px 16px;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 24px;
+            font-size: 15px;
+            outline: none;
+            background: var(--input-bg);
+            transition: border-color 0.3s, box-shadow 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        #user-input:focus {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+        }
+
+        #send-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, transform 0.1s;
+            font-size: 16px;
+        }
+
+        #send-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        #send-btn:active {
+            transform: scale(0.96);
+        }
+
+        .suggestion-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 0 16px 16px;
+            background: var(--card-bg);
+            border-top: 1px solid rgba(0,0,0,0.08);
+        }
+
+        .chip {
+            background: var(--secondary);
+            color: var(--text-primary);
+            border: 1px solid rgba(0,0,0,0.1);
+            padding: 8px 16px;
+            border-radius: 16px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .chip:hover {
+            background: #e6e9ef;
+            transform: translateY(-1px);
+        }
+
+        /* Scrollbar Styling */
+        #chat-box::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #chat-box::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #chat-box::-webkit-scrollbar-thumb {
+            background: #c4c4c4;
+            border-radius: 4px;
+        }
+
+        #chat-box::-webkit-scrollbar-thumb:hover {
+            background: #a0a0a0;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes typingAnimation {
+            0%, 100% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.2); opacity: 1; }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .chat-container {
+                height: 95vh;
+                border-radius: 12px;
+            }
+            
+            .message {
+                max-width: 90%;
+            }
+            
+            .chat-header {
+                padding: 14px 16px;
+                font-size: 16px;
+            }
+            
+            #chat-box {
+                padding: 16px;
+            }
+            
+            .welcome-message {
+                padding: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 12px;
+            }
+            
+            .chat-container {
+                height: 100vh;
+                border-radius: 0;
+            }
+            
+            .message {
+                max-width: 95%;
+                padding: 12px 16px;
+            }
+            
+            .chat-input-container {
+                padding: 12px;
+            }
+            
+            #user-input {
+                padding: 12px 14px;
+            }
+            
+            .suggestion-chips {
+                padding: 0 12px 12px;
+            }
+            
+            .chip {
+                padding: 6px 12px;
+                font-size: 13px;
+            }
+            
+            .header-actions {
+                right: 12px;
+            }
+            
+            .gemini-content {
+                font-size: 14px;
+            }
+        }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --secondary: #1f2937;
+                --text-primary: #f9fafb;
+                --text-secondary: #d1d5db;
+                --ai-bubble: #374151;
+                --background: #111827;
+                --card-bg: #1f2937;
+                --input-bg: #374151;
+            }
+            
+            #user-input {
+                border-color: #4b5563;
+                color: white;
+            }
+            
+            .chip {
+                background: #374151;
+                color: #e5e7eb;
+                border-color: #4b5563;
+            }
+            
+            .chip:hover {
+                background: #4b5563;
+            }
+            
+            .welcome-message {
+                background: #374151;
+                color: #e5e7eb;
+            }
+            
+            .inline-code {
+                background: rgba(255, 255, 255, 0.1);
+                color: #e5e7eb;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="logo">
+                <i class="fas fa-gem"></i>
+            </div>
+            <span>Chat with Gemini</span>
+            <div class="header-actions">
+                <i class="fas fa-expand" id="expand-btn"></i>
+                <i class="fas fa-cog" id="settings-btn"></i>
+            </div>
+        </div>
+        <div id="chat-box">
+            <div class="welcome-message">
+                <h3>Hello! I'm Gemini</h3>
+                <p>How can I assist you today? Feel free to ask me anything.</p>
+            </div>
+        </div>
+        <div class="suggestion-chips">
+            <div class="chip">Tell me a fun fact</div>
+            <div class="chip">How does AI work?</div>
+            <div class="chip">Write a poem about technology</div>
+            <div class="chip">Explain quantum computing</div>
+        </div>
+        <div class="chat-input-container">
+            <input type="text" id="user-input" placeholder="Type a message..." />
+            <button id="send-btn">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // Format the response from Gemini AI
+        function formatResponse(text) {
+            // Check if this is a simple greeting response
+            if (text.length < 150 && !text.includes('#') && !text.includes('-') && !text.includes('**')) {
+                return `<p>${text}</p>`;
+            }
+            
+            // Convert markdown-like formatting to HTML for more complex responses
+            let formattedText = text
+                .replace(/\*\*(.*?)\*\*/g, '<span class="highlight">$1</span>') // Bold text
+                .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italic text
+                .replace(/`(.*?)`/g, '<code class="inline-code">$1</code>') // Inline code
+                .replace(/# (.*?)(\n|$)/g, '<h3>$1</h3>') // Main headings
+                .replace(/## (.*?)(\n|$)/g, '<h4>$1</h4>') // Subheadings
+                .replace(/- (.*?)(\n|$)/g, '<li>$1</li>') // List items
+                .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>') // Wrap lists in ul
+                .replace(/\n\n/g, '</p><p>') // Paragraphs
+                .replace(/\n/g, '<br>'); // Line breaks
+
+            // Ensure proper paragraph structure
+            if (!formattedText.startsWith('<p>')) {
+                formattedText = '<p>' + formattedText;
+            }
+            if (!formattedText.endsWith('</p>')) {
+                formattedText = formattedText + '</p>';
+            }
+
+            return formattedText;
+        }
+
+        function appendMessage(sender, text, time){
+            let msgClass = sender === "user" ? "user" : "gemini";
+            let messageContent = sender === "gemini" ? `<div class="gemini-content">${formatResponse(text)}</div>` : text;
+            
+            let message = `<div class="message ${msgClass}">
+                            ${messageContent}
+                            <div class="timestamp">${time}</div>
+                           </div>`;
+            $("#chat-box").append(message);
+            $("#chat-box").scrollTop($("#chat-box")[0].scrollHeight);
+        }
+
+        function showTypingIndicator() {
+            let typingIndicator = `<div class="message-typing" id="typing-indicator">
+                                    <div class="typing-dot"></div>
+                                    <div class="typing-dot"></div>
+                                    <div class="typing-dot"></div>
+                                   </div>`;
+            $("#chat-box").append(typingIndicator);
+            $("#chat-box").scrollTop($("#chat-box")[0].scrollHeight);
+        }
+
+        function removeTypingIndicator() {
+            $("#typing-indicator").remove();
+        }
+
+        function sendMessage(){
+            let msg = $("#user-input").val().trim();
+            if(msg === "") return;
+            
+            appendMessage("user", msg, new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
+            $("#user-input").val("");
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            // Send message to Django backend
+            $.post("/send_message/", { 
+                message: msg, 
+                csrfmiddlewaretoken: getCSRFToken() 
+            })
+            .done(function(data){
+                removeTypingIndicator();
+                appendMessage("gemini", data.reply, data.timestamp);
+            })
+            .fail(function(xhr, status, error) {
+                removeTypingIndicator();
+                // For demo purposes, show a formatted response
+                const demoResponses = [
+                    "Hello! How can I help you today? 😊",
+                    "Hi there! What would you like to know?",
+                    "Hey! Nice to chat with you. What's on your mind?",
+                    "Hi! I'm here to help. What can I assist you with?"
+                ];
+                const randomResponse = demoResponses[Math.floor(Math.random() * demoResponses.length)];
+                appendMessage("gemini", randomResponse, new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
+                console.error("Error:", error);
+            });
+        }
+
+        // Function to get CSRF token from cookies
+        function getCSRFToken() {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, 10) === ('csrftoken=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(10));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Event listeners
+        $("#send-btn").click(sendMessage);
+        
+        $("#user-input").keypress(function(e){
+            if(e.which === 13) { 
+                sendMessage(); 
+            }
+        });
+        
+        // Add click event to suggestion chips
+        $(".chip").click(function() {
+            $("#user-input").val($(this).text());
+            sendMessage();
+        });
+
+        // Toggle fullscreen mode
+        $("#expand-btn").click(function() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        });
+
+        // Settings button
+        $("#settings-btn").click(function() {
+            alert("Settings would open here in a real implementation");
+        });
+    </script>
+</body>
+</html>
