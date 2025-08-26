@@ -3,9 +3,10 @@ from django.http import JsonResponse
 import google.generativeai as genai
 from datetime import datetime
 import re
+from decouple import config
 
 # Configure Gemini API
-API_KEY = "AIzaSyBFHpWlfh6m9gyBNlutt03UTeUhUvOFKsc"
+API_KEY = config('GEMINI_API_KEY')
 genai.configure(api_key=API_KEY)
 model = genai.GenerativeModel("gemini-2.0-flash")
 chat_session = model.start_chat()
