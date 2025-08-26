@@ -19,7 +19,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 GEMINI_API_KEY = config('GEMINI_API_KEY')
 
-ALLOWED_HOSTS = ["https://ai-django.onrender.com/"]
+ALLOWED_HOSTS = ["ai-django.onrender.com"]
 
 
 # Quick-start development settings - unsuitable for production
