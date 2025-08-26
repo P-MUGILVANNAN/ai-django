@@ -19,7 +19,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 GEMINI_API_KEY = config('GEMINI_API_KEY')
 
-ALLOWED_HOSTS = ["ai-django.onrender.com"]
+
 
 
 # Quick-start development settings - unsuitable for production
@@ -31,7 +31,7 @@ SECRET_KEY = 'django-insecure-y&-st_7zd@=5pafn#+@k=)6(irfxi3_0$9rtiu2ik4pn&($t@v
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["ai-django.onrender.com"]
 
 
 # Application definition
